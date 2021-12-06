@@ -123,7 +123,7 @@ class BanditUniform4(BanditEnv):
 
 
 class BanditUniform10(BanditEnv):
-    """A 4 armed bandit."""
+    """A 10 armed bandit."""
     def __init__(self, p_min=0.1, p_max=0.3, p_best=0.6, best=2):
         self.best = [best]
         self.num_arms = 10
@@ -230,6 +230,110 @@ class BanditChange4:
 
     def render(self, mode='human', close=False):
         pass
+
+
+class DeceptiveBanditEnv(gym.Env):
+    """
+    n-armed bandit environment, you have to move steps_away to find the best arm.
+    Params
+    ------
+    p_dist : list
+        A list of probabilities of the likelihood that a particular bandit will pay out
+    r_dist : list or list or lists
+        A list of either rewards (if number) or means and standard deviations (if list) of the payout that bandit has
+    """
+    def __init__(self, p_dist, r_dist, steps_away=1, max_steps=400):
+        if len(p_dist) != len(r_dist):
+            raise ValueError(
+                "Probability and Reward distribution must be the same length")
+
+        if min(p_dist) < 0 or max(p_dist) > 1:
+            raise ValueError("All probabilities must be between 0 and 1")
+
+        for reward in r_dist:
+            if isinstance(reward, list) and reward[1] <= 0:
+                raise ValueError(
+                    "Standard deviation in rewards must all be greater than 0")
+
+        if max_steps < (2 * steps_away):
+            raise ValueError("max_steps must be greater than 2*steps_away")
+        self.p_dist = p_dist
+        self.r_dist = r_dist
+        self.steps = 0
+        self.reward = 0
+        self.max_steps = max_steps
+        self.steps_away = steps_away
+        self.scale = np.concatenate(
+            (np.linspace(-1, 0, steps_away), np.linspace(0, 1, steps_away)))
+
+        self.n_bandits = len(p_dist)
+        self.action_space = spaces.Discrete(self.n_bandits)
+        self.observation_space = spaces.Discrete(1)
+
+        self.seed()
+
+    def seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+
+    def step(self, action):
+        # Sanity
+        if self.steps > self.max_steps:
+            raise EnvironmentError("Number of steps exceeded max.")
+
+        # Action is in the space?
+
+        action = int(action)
+        assert self.action_space.contains(action)
+
+        # Get the reward....
+        self.done = False
+
+        self.reward = 0
+        if self.np_random.uniform() < self.p_dist[action]:
+            self.reward = self.r_dist[action]
+
+        # Add deceptiveness. Only the best arms are deceptive.
+        if (action in self.best) and (self.reward != 0):
+            try:
+                self.reward *= self.scale[self.steps]
+            except IndexError:
+                self.reward *= np.max(self.scale)
+
+            self.steps += 1
+
+        return 0, float(self.reward), self.done, {}
+
+    def last(self):
+        return 0, float(self.reward), self.done, {}
+
+    def reset(self):
+        self.done = False
+        self.steps = 0
+        return [0]
+
+    def render(self, mode='human', close=False):
+        pass
+
+
+class DeceptiveBanditOneHigh10(DeceptiveBanditEnv):
+    """A (0.8, 0.2, 0.2, ...) bandit."""
+    def __init__(self):
+        self.best = [7]
+        self.num_arms = 10
+
+        # Set p(R > 0)
+        p_dist = [0.2] * self.num_arms
+        p_dist[self.best[0]] = 0.8
+
+        # Set baseline R
+        r_dist = [1] * self.num_arms
+
+        DeceptiveBanditEnv.__init__(self,
+                                    p_dist=p_dist,
+                                    r_dist=r_dist,
+                                    steps_away=10,
+                                    max_steps=500)
 
 
 # -------------------------------------------------------------------------
