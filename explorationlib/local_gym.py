@@ -294,7 +294,8 @@ class DeceptiveBanditEnv(gym.Env):
             self.reward = self.r_dist[action]
 
         # Add deceptiveness. Only the best arms are deceptive.
-        if (action in self.best) and (self.reward != 0):
+        # Modified to: all arms are deceptive in their value except the best arm
+        if (action not in self.best) and (self.reward != 0):
             try:
                 self.reward *= self.scale[self.steps]
             except IndexError:
@@ -316,11 +317,12 @@ class DeceptiveBanditEnv(gym.Env):
         pass
 
 
-class DeceptiveBanditOneHigh10(DeceptiveBanditEnv):
+class DeceptiveBanditOneHigh50(DeceptiveBanditEnv):
     """A (0.8, 0.2, 0.2, ...) bandit."""
     def __init__(self):
-        self.best = [7]
-        self.num_arms = 10
+        self.best = [14]
+        self.num_arms = 50
+        # Increased number of arms to simulate day-to-day decision making between many options
 
         # Set p(R > 0)
         p_dist = [0.2] * self.num_arms
