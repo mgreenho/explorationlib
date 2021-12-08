@@ -320,8 +320,8 @@ class DeceptiveBanditEnv(gym.Env):
 class DeceptiveBanditOneHigh50(DeceptiveBanditEnv):
     """A (0.8, 0.2, 0.2, ...) bandit."""
     def __init__(self):
-        self.best = [14]
-        self.num_arms = 50
+        self.best = [7]
+        self.num_arms = 10
         # Increased number of arms to simulate day-to-day decision making between many options
 
         # Set p(R > 0)
