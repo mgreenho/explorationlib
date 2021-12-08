@@ -315,8 +315,27 @@ class DeceptiveBanditEnv(gym.Env):
     def render(self, mode='human', close=False):
         pass
 
-
 class DeceptiveBanditOneHigh10(DeceptiveBanditEnv):
+    """A (0.8, 0.2, 0.2, ...) bandit."""
+    def __init__(self):
+        self.best = [7]
+        self.num_arms = 10
+
+        # Set p(R > 0)
+        p_dist = [0.2] * self.num_arms
+        p_dist[self.best[0]] = 0.8
+
+        # Set baseline R
+        r_dist = [1] * self.num_arms
+
+        DeceptiveBanditEnv.__init__(self,
+                                    p_dist=p_dist,
+                                    r_dist=r_dist,
+                                    steps_away=10,
+                                    max_steps=500)
+
+        
+class DeceptiveBanditOneHigh20(DeceptiveBanditEnv):
     """A (0.8, 0.2, 0.2, ...) bandit."""
     def __init__(self):
         self.best = [3, 14, 15, 16, 17, 18, 19, 20]
