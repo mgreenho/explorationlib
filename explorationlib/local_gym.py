@@ -294,7 +294,7 @@ class DeceptiveBanditEnv(gym.Env):
             self.reward = self.r_dist[action]
 
         # Add deceptiveness. Only the best arms are deceptive.
-        if (action in self.best) and (self.reward != 0):
+        if not(action in self.best) and (self.reward != 0):
             try:
                 self.reward *= self.scale[self.steps]
             except IndexError:
