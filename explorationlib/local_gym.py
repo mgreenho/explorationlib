@@ -319,8 +319,8 @@ class DeceptiveBanditEnv(gym.Env):
 class DeceptiveBanditOneHigh10(DeceptiveBanditEnv):
     """A (0.8, 0.2, 0.2, ...) bandit."""
     def __init__(self):
-        self.best = [7]
-        self.num_arms = 10
+        self.best = [14]
+        self.num_arms = 50
 
         # Set p(R > 0)
         p_dist = [0.2] * self.num_arms
